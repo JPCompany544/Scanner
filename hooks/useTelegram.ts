@@ -19,7 +19,12 @@ declare global {
 }
 
 export function useTelegram() {
-  const tg = useMemo(() => window?.Telegram?.WebApp, []);
+  const tg = useMemo(() => {
+    if (typeof window !== "undefined") {
+      return window?.Telegram?.WebApp;
+    }
+    return undefined;
+  }, []);
 
   useEffect(() => {
     try {

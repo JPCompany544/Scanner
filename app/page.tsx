@@ -175,10 +175,12 @@ export default function VaultScannerPage() {
                       <div className="mt-5">
                         <button
                           onClick={() => {
-                            window.open(
-                              "https://vault-fi-3y63.vercel.app/app/vaults/solis-yield-vault",
-                              "_blank"
-                            );
+                            if (typeof window !== "undefined") {
+                              window.open(
+                                "https://vault-fi-3y63.vercel.app/app/vaults/solis-yield-vault",
+                                "_blank"
+                              );
+                            }
                           }}
                           className="w-full border border-[#C3162C] bg-[#000000] text-[#ECECEC] py-2 text-[0.75rem] font-semibold tracking-[0.22em] uppercase transition-colors duration-150 hover:border-[#E8173A] hover:shadow-[0_0_0_6px_rgba(195,22,44,0.12)] active:scale-95"
                         >
