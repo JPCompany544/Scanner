@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function VaultDetailPage() {
+function VaultDetailPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
@@ -46,5 +47,19 @@ export default function VaultDetailPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function VaultDetailPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen w-full flex flex-col items-center px-4 py-8 bg-[#000000] text-[#ECECEC]">
+        <div className="w-full max-w-2xl border border-[#C3162C] bg-[#000000] p-6 md:p-8">
+          <p className="text-[#949191] text-center">Loading...</p>
+        </div>
+      </main>
+    }>
+      <VaultDetailPageContent />
+    </Suspense>
   );
 }

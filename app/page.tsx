@@ -7,7 +7,7 @@ import RitualAnimation from "@/components/RitualAnimation";
 import ResultPanel from "@/components/ResultPanel";
 import Paywall from "@/components/Paywall";
 import { useTelegram } from "@/hooks/useTelegram";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 
@@ -38,7 +38,7 @@ const VAULTS = [
   },
 ];
 
-export default function VaultScannerPage() {
+function VaultScannerPageContent() {
   useTelegram();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -196,5 +196,21 @@ export default function VaultScannerPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function VaultScannerPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen w-full flex flex-col items-center px-4 bg-[#000000] text-[#ECECEC] font-sans">
+        <div className="w-full max-w-[420px] border border-[#C3162C] bg-gradient-to-b from-[#000000] via-[#000000] to-[#000000] px-6 py-10 animate-panel-reveal">
+          <div className="text-center">
+            <p className="text-[#949191] text-sm">Loading...</p>
+          </div>
+        </div>
+      </main>
+    }>
+      <VaultScannerPageContent />
+    </Suspense>
   );
 }
