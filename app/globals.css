@@ -1,26 +1,210 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #ECECEC;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer utilities {
+  @keyframes sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .animate-sweep {
+    animation: sweep 0.7s linear infinite;
+  }
+
+  @keyframes sigil {
+    0% { transform: rotate(-8deg); }
+    100% { transform: rotate(8deg); }
+  }
+
+  .animate-sigil {
+    animation: sigil 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+    20%, 24%, 55% { opacity: 0; }
+  }
+
+  .animate-flicker {
+    animation: flicker 1.3s infinite both;
+  }
+
+  @keyframes ring-hot {
+    0% { box-shadow: 0 0 0 0 rgba(232, 23, 58, 0.6); }
+    70% { box-shadow: 0 0 0 12px rgba(232, 23, 58, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(232, 23, 58, 0); }
+  }
+
+  .animate-ring-hot {
+    animation: ring-hot 1.5s ease-out infinite;
+  }
+
+  @keyframes ring-cold {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0.4; }
+  }
+
+  .animate-ring-cold {
+    animation: ring-cold 3s ease-in-out infinite;
+  }
+
+  @keyframes ring-frozen {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .animate-ring-frozen {
+    animation: ring-frozen 2s steps(6) infinite;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out both;
+  }
+
+  @keyframes page-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  .animate-page-in {
+    animation: page-in 0.5s ease-out both;
+  }
+
+  @keyframes dim-pulse {
+    0% { background-color: rgba(0, 0, 0, 0); }
+    50% { background-color: rgba(0, 0, 0, 0.08); }
+    100% { background-color: rgba(0, 0, 0, 0); }
+  }
+
+  .animate-dim-pulse {
+    animation: dim-pulse 0.3s ease-out both;
+  }
+
+  @keyframes input-border-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(195, 22, 44, 0); }
+    50% { box-shadow: 0 0 0 6px rgba(195, 22, 44, 0.18); }
+  }
+
+  .animate-input-border-pulse {
+    animation: input-border-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes button-press {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.98); }
+  }
+
+  .animate-button-press {
+    animation: button-press 0.12s ease-out;
+  }
+
+  @keyframes button-flash {
+    0% { box-shadow: 0 0 0 0 rgba(195, 22, 44, 0.8); }
+    100% { box-shadow: 0 0 0 10px rgba(195, 22, 44, 0); }
+  }
+
+  .animate-button-flash {
+    animation: button-flash 0.1s ease-out;
+  }
+
+  @keyframes result-border-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(195, 22, 44, 0.8); }
+    100% { box-shadow: 0 0 0 10px rgba(195, 22, 44, 0); }
+  }
+
+  .animate-result-border-pulse {
+    animation: result-border-pulse 0.5s ease-out both;
+  }
+
+  /* Result panel cinematic reveal */
+  @keyframes panel-reveal {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .animate-panel-reveal {
+    animation: panel-reveal 0.35s ease-out both;
+  }
+
+  @keyframes symbol-in {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .animate-symbol-in {
+    animation: symbol-in 0.35s ease-out both;
+  }
+
+  @keyframes wave-expand {
+    0% { transform: scale(1); opacity: 0.35; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+  .animate-wave {
+    animation: wave-expand 2.2s ease-out infinite;
+  }
+
+  /* Sigil continuous pulse */
+  @keyframes sigil-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+  .animate-sigil-pulse {
+    animation: sigil-pulse 0.8s ease-in-out infinite;
+  }
+
+  /* Softer expanding waves 1 -> 1.25 */
+  @keyframes wave-soft {
+    0% { transform: scale(1); opacity: 0.35; }
+    100% { transform: scale(1.25); opacity: 0; }
+  }
+  .animate-wave-soft {
+    animation: wave-soft 2s ease-out infinite;
+  }
+
+  /* Title slight pulse */
+  @keyframes title-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.015); }
+    100% { transform: scale(1); }
+  }
+  .animate-title-pulse {
+    animation: title-pulse 0.6s ease-out both;
+  }
+
+  /* Button slide-up in */
+  @keyframes button-in {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .animate-button-in {
+    animation: button-in 0.35s ease-out both;
+  }
+
+  /* Typing effect using max-width steps */
+  @keyframes typing {
+    0% { max-width: 0; }
+    100% { max-width: 60ch; }
+  }
+  .animate-typing {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    animation: typing 1.2s steps(30, end) both;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #000000;
+  color: #ECECEC;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
 }
