@@ -146,9 +146,51 @@ function VaultScannerPageContent() {
   const [animating, setAnimating] = useState(false);
   const [addressInput, setAddressInput] = useState('');
   const [codeInput, setCodeInput] = useState('');
+  const [formatError, setFormatError] = useState<string | null>(null);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [requestedAddress, setRequestedAddress] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
+
+  // Validate address format for multiple networks
+  const validateFormat = (address: string): boolean => {
+    if (!address) return false;
+    const a = address.trim();
+
+    // ETH / EVM (0x + 40 hex chars)
+    if (/^0x[a-fA-F0-9]{40}$/.test(a)) return true;
+
+    // Solana (Base58, 32-44 chars)
+    if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a)) return true;
+
+    // TRON (T + 33 base58 chars)
+    if (/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(a)) return true;
+
+    // BTC Legacy (starts with 1 or 3, 26-35 alphanumeric chars)
+    if (/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(a)) return true;
+
+    // BTC Bech32 (starts with bc1, 39-59 chars)
+    if (/^(bc1)[a-z0-9]{25,59}$/.test(a)) return true;
+
+    return false;
+  };
+
+  // Handle address input change
+  const handleAddressChange = (value: string) => {
+    setAddressInput(value);
+    setHasInteracted(true);
+    
+    // Only validate if the user has typed something
+    if (value.trim()) {
+      const isValid = validateFormat(value);
+      setFormatError(isValid ? null : 'Enter a valid wallet address (ETH, SOL, TRON, BTC)');
+    } else {
+      setFormatError(null);
+    }
+  };
+
+  // Check if the form is valid
+  const isFormValid = addressInput.trim() !== '' && !formatError;
 
   useEffect(() => {
     // On mount, check URL to restore results when navigating back from /vaults
@@ -179,7 +221,8 @@ function VaultScannerPageContent() {
   };
 
   const onScanClick = () => {
-    setRequestedAddress(addressInput);
+    if (!isFormValid) return;
+    setRequestedAddress(addressInput.trim());
     setView("paywall");
   };
 
@@ -200,8 +243,29 @@ function VaultScannerPageContent() {
           <div className="relative z-10 w-full max-w-[420px] border border-[#C3162C] bg-gradient-to-b from-[#000000] via-[#000000] to-[#000000] px-6 py-10 animate-panel-reveal">
             <Header />
             <div className="space-y-5">
-              <InputBar onChange={(v) => setAddressInput(v)} />
-              <ScanButton onClick={onScanClick} />
+              <div className="w-full space-y-2">
+                <InputBar 
+                  value={addressInput}
+                  onChange={handleAddressChange}
+                  hasError={hasInteracted && !!formatError}
+                  onBlur={() => setHasInteracted(true)}
+                />
+                {hasInteracted && formatError && (
+                  <p 
+                    id="address-error" 
+                    className="text-red-500 text-xs mt-1 px-1 animate-fade-in"
+                    role="alert"
+                  >
+                    {formatError}
+                  </p>
+                )}
+              </div>
+              <div className="w-full">
+                <ScanButton 
+                  onClick={onScanClick} 
+                  disabled={!isFormValid}
+                />
+              </div>
             </div>
           </div>
         </div>
