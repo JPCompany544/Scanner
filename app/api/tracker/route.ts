@@ -26,30 +26,42 @@ export async function POST(request: NextRequest) {
       hasChatId: !!chatId
     });
 
-    // If you want to send to Telegram, uncomment this section
-    /*
+    // Send notification to Telegram if credentials are available
     if (botToken && chatId) {
-      const message = `🚨 New Visitor\n` +
-                     `🕒 Time: ${new Date().toLocaleString()}\n` +
-                     `🌐 Page: ${page}\n` +
-                     `📍 IP: ${ip}`;
+      try {
+        const message = `🚨 *New Visitor*\n` +
+                     `🕒 *Time*: ${new Date().toLocaleString()}\n` +
+                     `🌐 *Page*: ${page}\n` +
+                     `📍 *IP*: \`${ip}\`\n` +
+                     `📱 *User Agent*: ${body.userAgent || 'Unknown'}`;
 
-      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
-      const response = await fetch(telegramUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: message,
-          parse_mode: 'Markdown',
-        }),
-      });
+        console.log('📤 Sending to Telegram...');
+        const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        const telegramResponse = await fetch(telegramUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'Markdown',
+            disable_web_page_preview: true
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`Telegram API error: ${response.status}`);
+        const telegramData = await telegramResponse.json();
+        console.log('📩 Telegram API Response:', {
+          status: telegramResponse.status,
+          data: telegramData
+        });
+
+        if (!telegramResponse.ok) {
+          throw new Error(`Telegram API error: ${JSON.stringify(telegramData)}`);
+        }
+      } catch (telegramError) {
+        console.error('❌ Telegram Error:', telegramError);
+        // Don't fail the entire request if Telegram fails
       }
     }
-    */
 
     return NextResponse.json({ 
       status: 'success',
