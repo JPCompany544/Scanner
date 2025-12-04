@@ -8,8 +8,27 @@ import ResultPanel from "@/components/ResultPanel";
 import Paywall from "@/components/Paywall";
 import { useTelegram } from "@/hooks/useTelegram";
 import { useEffect, useRef, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+
+// Tracking component for page views
+function TrackPageView() {
+  useEffect(() => {
+    const notify = async () => {
+      try {
+        await fetch("/api/tracker", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ page: window.location.href }),
+        });
+      } catch (err) {
+        console.error("Failed to notify tracker:", err);
+      }
+    };
+    notify();
+  }, []);
+
+  return null;
+}
 
 const VAULTS = [
   {
@@ -38,17 +57,77 @@ const VAULTS = [
   },
 ];
 
+type ViewType = 'scanner' | 'paywall' | 'results';
+
+type ScanResult = 'hot' | 'cold' | null;
+
 function VaultScannerPageContent() {
   useTelegram();
   const router = useRouter();
   const searchParams = useSearchParams();
-  // State machine
-  const [view, setView] = useState<"scanner" | "paywall" | "results">("scanner");
-  const [requestedAddress, setRequestedAddress] = useState<string | null>(null);
-  const [addressInput, setAddressInput] = useState<string>("");
-  const [codeInput, setCodeInput] = useState<string>("");
-  const [scanResult, setScanResult] = useState<"hot" | null>(null);
+  
+  // Track page view on component mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const trackPageView = async () => {
+      console.log('📡 Sending tracking request to /api/tracker...');
+      try {
+        const response = await fetch('/api/tracker', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ 
+            page: window.location.href,
+            pathname: window.location.pathname,
+            referrer: document.referrer || 'direct',
+            timestamp: new Date().toISOString()
+          }),
+        });
+        
+        const responseText = await response.text();
+        let responseData;
+        try {
+          responseData = responseText ? JSON.parse(responseText) : {};
+        } catch (e) {
+          console.error('❌ Failed to parse JSON response:', responseText);
+          responseData = { raw: responseText };
+        }
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        console.log('✅ Page view tracked successfully:', responseData);
+        return responseData;
+      } catch (error) {
+        console.error('❌ Error tracking page view:', {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
+        throw error;
+      }
+    };
+
+    // Add a small delay to ensure the page is fully loaded
+    const timer = setTimeout(() => {
+      trackPageView().catch(console.error);
+    }, 100);
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
+  
+  // State management
+  const [view, setView] = useState<ViewType>('scanner');
   const [animating, setAnimating] = useState(false);
+  const [addressInput, setAddressInput] = useState('');
+  const [codeInput, setCodeInput] = useState('');
+  const [requestedAddress, setRequestedAddress] = useState<string | null>(null);
+  const [scanResult, setScanResult] = useState<ScanResult>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -68,8 +147,7 @@ function VaultScannerPageContent() {
       setScanResult(null);
       setAnimating(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   const startScanAfterUnlock = () => {
     setView("results");
