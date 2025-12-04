@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+interface LocationData {
+  country: string;
+  city: string;
+  region?: string;
+  isp?: string;
+  mobile?: boolean;
+  proxy?: boolean;
+  hosting?: boolean;
+  lat?: number;
+  lon?: number;
+  org?: string;
+  query?: string;
+}
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
@@ -9,6 +23,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const page = body?.page || 'unknown';
+    const userAgent = body?.userAgent || 'Unknown';
     
     // Get the IP address from the request headers
     const forwarded = request.headers.get('x-forwarded-for');
@@ -18,22 +33,60 @@ export async function POST(request: NextRequest) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
     
+    // Fetch location data
+    let locationData: LocationData = { country: 'Unknown', city: 'Unknown' };
+    try {
+      const ipApiUrl = `http://ip-api.com/json/${ip}?fields=status,message,country,regionName,city,lat,lon,isp,org,as,mobile,proxy,hosting,query`;
+      console.log('🌍 Fetching location data from:', ipApiUrl);
+      const response = await fetch(ipApiUrl);
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        locationData = {
+          country: data.country || 'Unknown',
+          city: data.city || 'Unknown',
+          region: data.regionName,
+          isp: data.isp,
+          mobile: data.mobile,
+          proxy: data.proxy,
+          hosting: data.hosting,
+          lat: data.lat,
+          lon: data.lon,
+          org: data.org,
+          query: data.query
+        };
+      }
+    } catch (locationError) {
+      console.error('❌ Location lookup error:', locationError);
+    }
+    
     console.log('🔔 Tracker hit:', { 
       page, 
-      ip, 
+      ip,
+      location: locationData,
       time: new Date().toISOString(),
       hasBotToken: !!botToken,
-      hasChatId: !!chatId
+      hasChatId: !!chatId,
+      userAgent
     });
 
     // Send notification to Telegram if credentials are available
     if (botToken && chatId) {
       try {
+        const mapLink = locationData.lat && locationData.lon 
+          ? `https://www.google.com/maps?q=${locationData.lat},${locationData.lon}`
+          : '';
+        
         const message = `🚨 *New Visitor*\n` +
                      `🕒 *Time*: ${new Date().toLocaleString()}\n` +
                      `🌐 *Page*: ${page}\n` +
                      `📍 *IP*: \`${ip}\`\n` +
-                     `📱 *User Agent*: ${body.userAgent || 'Unknown'}`;
+                     `🌍 *Location*: ${locationData.city}, ${locationData.country}${locationData.region ? `, ${locationData.region}` : ''}\n` +
+                     (mapLink ? `🗺️ *Map*: [View on Google Maps](${mapLink})\n` : '') +
+                     `🏢 *ISP*: ${locationData.isp || 'Unknown'}\n` +
+                     (locationData.org ? `🏛️ *Organization*: ${locationData.org}\n` : '') +
+                     `📱 *User Agent*: \`${userAgent}\`\n` +
+                     `🔍 *Details*: ${locationData.mobile ? '📱 Mobile' : ''} ${locationData.proxy ? '| 🔄 Proxy' : ''} ${locationData.hosting ? '| ☁️ Hosting' : ''}`.trim();
 
         console.log('📤 Sending to Telegram...');
         const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -66,7 +119,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       status: 'success',
       message: 'Visitor tracked successfully',
-      data: { page, ip, timestamp: new Date().toISOString() }
+      data: { 
+        page, 
+        ip, 
+        location: locationData,
+        timestamp: new Date().toISOString(),
+        userAgent
+      }
     });
 
   } catch (error) {

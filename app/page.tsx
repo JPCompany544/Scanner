@@ -83,7 +83,27 @@ function VaultScannerPageContent() {
             page: window.location.href,
             pathname: window.location.pathname,
             referrer: document.referrer || 'direct',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            screen: {
+              width: window.screen.width,
+              height: window.screen.height,
+              colorDepth: window.screen.colorDepth,
+              pixelRatio: window.devicePixelRatio || 1
+            },
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            platform: navigator.platform,
+            doNotTrack: navigator.doNotTrack === '1' || false,
+            cookiesEnabled: navigator.cookieEnabled,
+            hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
+            deviceMemory: (navigator as any).deviceMemory || 'unknown',
+            connection: (navigator as any).connection ? {
+              effectiveType: (navigator as any).connection.effectiveType,
+              downlink: (navigator as any).connection.downlink,
+              rtt: (navigator as any).connection.rtt,
+              saveData: (navigator as any).connection.saveData
+            } : 'unsupported'
           }),
         });
         
